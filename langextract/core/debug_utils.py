@@ -148,6 +148,92 @@ def debug_log_calls(fn: Callable) -> Callable:
   return wrapper
 
 
+_TRACING_INITIALIZED = False
+
+
+def _ensure_overmind_init() -> None:
+  global _TRACING_INITIALIZED
+  if _TRACING_INITIALIZED:
+    return
+  from overmind import init  # pylint: disable=import-outside-toplevel
+
+  init(service_name="Structured Extraction Agent")
+  _TRACING_INITIALIZED = True
+
+
+def trace_workflow(name: str | None = None):
+  """Wrap a function in an Overmind workflow span."""
+
+  def decorator(fn: Callable) -> Callable:
+    traced_fn: Callable | None = None
+
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+      nonlocal traced_fn
+      _ensure_overmind_init()
+      if traced_fn is None:
+        from overmind import workflow  # pylint: disable=import-outside-toplevel
+
+        traced_fn = workflow(name)(fn)
+      return traced_fn(*args, **kwargs)
+
+    return wrapper
+
+  return decorator
+
+
+def trace_observe(name: str | None = None):
+  """Wrap a function in an Overmind observe span."""
+
+  def decorator(fn: Callable) -> Callable:
+    traced_fn: Callable | None = None
+
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+      nonlocal traced_fn
+      _ensure_overmind_init()
+      if traced_fn is None:
+        from overmind import observe  # pylint: disable=import-outside-toplevel
+
+        traced_fn = observe(span_name=name)(fn)
+      return traced_fn(*args, **kwargs)
+
+    return wrapper
+
+  return decorator
+
+
+def trace_span(name: str):
+  """Wrap a function in an Overmind span."""
+
+  def decorator(fn: Callable) -> Callable:
+    if inspect.isgeneratorfunction(fn):
+
+      @functools.wraps(fn)
+      def generator_wrapper(*args, **kwargs):
+        _ensure_overmind_init()
+        from overmind import get_tracer  # pylint: disable=import-outside-toplevel
+
+        tracer = get_tracer()
+        with tracer.start_as_current_span(name):
+          yield from fn(*args, **kwargs)
+
+      return generator_wrapper
+
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+      _ensure_overmind_init()
+      from overmind import get_tracer  # pylint: disable=import-outside-toplevel
+
+      tracer = get_tracer()
+      with tracer.start_as_current_span(name):
+        return fn(*args, **kwargs)
+
+    return wrapper
+
+  return decorator
+
+
 def configure_debug_logging() -> None:
   """Enable debug logging for the 'langextract' namespace only."""
   logger = logging.getLogger("langextract")

@@ -38,6 +38,7 @@ from langextract import prompting
 from langextract import resolver as resolver_lib
 from langextract.core import base_model
 from langextract.core import data
+from langextract.core import debug_utils
 from langextract.core import exceptions
 from langextract.core import format_handler as fh
 from langextract.core import tokenizer as tokenizer_lib
@@ -282,6 +283,7 @@ class Annotator:
           **kwargs,
       )
 
+  @debug_utils.trace_span("single_pass")
   def _annotate_documents_single_pass(
       self,
       documents: Iterable[data.Document],
@@ -444,6 +446,7 @@ class Annotator:
 
     yield from _emit_docs_iter(keep_last_doc=False)
 
+  @debug_utils.trace_span("multi_pass_recall")
   def _annotate_documents_sequential_passes(
       self,
       documents: Iterable[data.Document],
