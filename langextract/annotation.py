@@ -28,6 +28,7 @@ from __future__ import annotations
 import collections
 from collections.abc import Iterable, Iterator
 import time
+import typing
 from typing import DefaultDict
 
 from absl import logging
@@ -38,6 +39,7 @@ from langextract import prompting
 from langextract import resolver as resolver_lib
 from langextract.core import base_model
 from langextract.core import data
+from langextract.core import debug_utils
 from langextract.core import exceptions
 from langextract.core import format_handler as fh
 from langextract.core import tokenizer as tokenizer_lib
@@ -115,6 +117,7 @@ def _extractions_overlap(
   return start1 < end2 and start2 < end1
 
 
+@debug_utils.trace_tool("chunk_document")
 def _document_chunk_iterator(
     documents: Iterable[data.Document],
     max_char_buffer: int,
@@ -158,6 +161,15 @@ def _document_chunk_iterator(
     visited_ids.add(document_id)
 
     yield from chunk_iter
+
+
+@debug_utils.trace_tool("llm_infer")
+def _language_model_infer(
+    language_model: base_model.BaseLanguageModel,
+    batch_prompts: list[str],
+    **kwargs,
+) -> typing.Any:
+  return language_model.infer(batch_prompts=batch_prompts, **kwargs)
 
 
 class Annotator:
@@ -282,6 +294,7 @@ class Annotator:
           **kwargs,
       )
 
+  @debug_utils.trace_observe("single_pass")
   def _annotate_documents_single_pass(
       self,
       documents: Iterable[data.Document],
@@ -389,7 +402,7 @@ class Annotator:
           except AttributeError:
             pass
 
-        outputs = self._language_model.infer(batch_prompts=prompts, **kwargs)
+        outputs = _language_model_infer(self._language_model, prompts, **kwargs)
         if not isinstance(outputs, list):
           outputs = list(outputs)
 
@@ -444,6 +457,7 @@ class Annotator:
 
     yield from _emit_docs_iter(keep_last_doc=False)
 
+  @debug_utils.trace_observe("sequential_passes")
   def _annotate_documents_sequential_passes(
       self,
       documents: Iterable[data.Document],

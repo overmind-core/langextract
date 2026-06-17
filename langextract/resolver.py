@@ -35,6 +35,7 @@ import warnings
 from absl import logging
 
 from langextract.core import data
+from langextract.core import debug_utils
 from langextract.core import exceptions
 from langextract.core import format_handler as fh
 from langextract.core import schema
@@ -264,6 +265,7 @@ class Resolver(AbstractResolver):
     self.extraction_index_suffix = extraction_index_suffix
     self._constraint = constraint
 
+  @debug_utils.trace_tool("resolve_extractions")
   def resolve(
       self,
       input_text: str,
@@ -315,6 +317,7 @@ class Resolver(AbstractResolver):
 
     return processed_extractions
 
+  @debug_utils.trace_tool("align_to_source")
   def align(
       self,
       extractions: Sequence[data.Extraction],

@@ -28,6 +28,7 @@ from absl import logging
 import more_itertools
 
 from langextract.core import data
+from langextract.core import debug_utils
 from langextract.core import exceptions
 from langextract.core import tokenizer as tokenizer_lib
 
@@ -438,6 +439,7 @@ class ChunkIterator:
         char_interval.end_pos - char_interval.start_pos
     ) > self.max_char_buffer
 
+  @debug_utils.trace_tool("chunk_document")
   def __next__(self) -> TextChunk:
     sentence = next(self.sentence_iter)
     # If the next token is greater than the max_char_buffer, let it be the
