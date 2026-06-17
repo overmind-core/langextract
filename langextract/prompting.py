@@ -24,6 +24,7 @@ from typing_extensions import override
 import yaml
 
 from langextract.core import data
+from langextract.core import debug_utils
 from langextract.core import exceptions
 from langextract.core import format_handler
 
@@ -212,6 +213,7 @@ class ContextAwarePromptBuilder(PromptBuilder):
     return self._context_window_chars
 
   @override
+  @debug_utils.trace_observe("context_aware_chunking")
   def build_prompt(
       self,
       chunk_text: str,

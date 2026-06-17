@@ -30,6 +30,7 @@ import requests
 from langextract import data_lib
 from langextract import progress
 from langextract.core import data
+from langextract.core import debug_utils
 from langextract.core import exceptions
 
 DEFAULT_TIMEOUT_SECONDS = 30
@@ -262,6 +263,7 @@ def is_url(text: str) -> bool:
     return False
 
 
+@debug_utils.trace_tool("fetch_url")
 def download_text_from_url(
     url: str,
     timeout: int = DEFAULT_TIMEOUT_SECONDS,
