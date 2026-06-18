@@ -20,6 +20,8 @@ import urllib.parse
 
 import tqdm
 
+from langextract.core import debug_utils
+
 # ANSI color codes for terminal output
 BLUE = "\033[94m"
 GREEN = "\033[92m"
@@ -78,6 +80,7 @@ def create_download_progress_bar(
   )
 
 
+@debug_utils.trace_observe("single_pass")
 def create_extraction_progress_bar(
     iterable: Any, model_info: str | None = None, disable: bool = False
 ) -> tqdm.tqdm:

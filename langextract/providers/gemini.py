@@ -30,6 +30,7 @@ from absl import logging
 
 from langextract.core import base_model
 from langextract.core import data
+from langextract.core import debug_utils
 from langextract.core import exceptions
 from langextract.core import schema
 from langextract.core import types as core_types
@@ -334,6 +335,7 @@ class GeminiLanguageModel(base_model.BaseLanguageModel):  # pylint: disable=too-
 
     return bool(_RETRYABLE_MESSAGE_RE.search(str(error)))
 
+  @debug_utils.trace_tool("language_model_infer")
   def _process_single_prompt(
       self, prompt: str, config: dict
   ) -> core_types.ScoredOutput:
@@ -378,6 +380,7 @@ class GeminiLanguageModel(base_model.BaseLanguageModel):  # pylint: disable=too-
             f'Gemini API error: {e}', original=e
         ) from e
 
+  @debug_utils.trace_tool("language_model_infer")
   def infer(
       self, batch_prompts: Sequence[str], **kwargs
   ) -> Iterator[Sequence[core_types.ScoredOutput]]:
