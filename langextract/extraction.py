@@ -29,10 +29,12 @@ from langextract import prompting
 from langextract import resolver
 from langextract.core import base_model
 from langextract.core import data
+from langextract.core import debug_utils
 from langextract.core import format_handler as fh
 from langextract.core import tokenizer as tokenizer_lib
 
 
+@debug_utils.trace_workflow("Structured Extraction Annotator")
 def extract(
     text_or_documents: str | Iterable[data.Document],
     prompt_description: str | None = None,

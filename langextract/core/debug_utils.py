@@ -148,6 +148,76 @@ def debug_log_calls(fn: Callable) -> Callable:
   return wrapper
 
 
+_TRACING_INITIALIZED = False
+
+
+def _ensure_overmind_init() -> None:
+  global _TRACING_INITIALIZED
+  if _TRACING_INITIALIZED:
+    return
+  from overmind import init  # pylint: disable=import-outside-toplevel
+
+  init(service_name="Structured Extraction Annotator")
+  _TRACING_INITIALIZED = True
+
+
+def trace_workflow(name: str | None = None):
+  def decorator(fn: Callable) -> Callable:
+    traced_fn: Callable | None = None
+
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+      nonlocal traced_fn
+      _ensure_overmind_init()
+      if traced_fn is None:
+        from overmind import workflow  # pylint: disable=import-outside-toplevel
+
+        traced_fn = workflow(name)(fn)
+      return traced_fn(*args, **kwargs)
+
+    return wrapper
+
+  return decorator
+
+
+def trace_tool(name: str | None = None):
+  def decorator(fn: Callable) -> Callable:
+    traced_fn: Callable | None = None
+
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+      nonlocal traced_fn
+      _ensure_overmind_init()
+      if traced_fn is None:
+        from overmind import tool  # pylint: disable=import-outside-toplevel
+
+        traced_fn = tool(name)(fn)
+      return traced_fn(*args, **kwargs)
+
+    return wrapper
+
+  return decorator
+
+
+def trace_observe(name: str | None = None):
+  def decorator(fn: Callable) -> Callable:
+    traced_fn: Callable | None = None
+
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+      nonlocal traced_fn
+      _ensure_overmind_init()
+      if traced_fn is None:
+        from overmind import observe  # pylint: disable=import-outside-toplevel
+
+        traced_fn = observe(span_name=name)(fn)
+      return traced_fn(*args, **kwargs)
+
+    return wrapper
+
+  return decorator
+
+
 def configure_debug_logging() -> None:
   """Enable debug logging for the 'langextract' namespace only."""
   logger = logging.getLogger("langextract")

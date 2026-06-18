@@ -24,6 +24,7 @@ from typing_extensions import override
 import yaml
 
 from langextract.core import data
+from langextract.core import debug_utils
 from langextract.core import exceptions
 from langextract.core import format_handler
 
@@ -112,6 +113,7 @@ class QAPromptGenerator:
         f"{self.answer_prefix}{answer}\n",
     ])
 
+  @debug_utils.trace_tool("build_prompt")
   def render(self, question: str, additional_context: str | None = None) -> str:
     """Generate a text representation of the prompt.
 
@@ -153,6 +155,7 @@ class PromptBuilder:
     """
     self._generator = generator
 
+  @debug_utils.trace_tool("build_prompt")
   def build_prompt(
       self,
       chunk_text: str,
@@ -212,6 +215,7 @@ class ContextAwarePromptBuilder(PromptBuilder):
     return self._context_window_chars
 
   @override
+  @debug_utils.trace_tool("build_prompt")
   def build_prompt(
       self,
       chunk_text: str,
