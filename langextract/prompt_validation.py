@@ -25,6 +25,7 @@ from absl import logging
 
 from langextract import resolver
 from langextract.core import data
+from langextract.core import debug_utils
 from langextract.core import tokenizer as tokenizer_lib
 
 __all__ = [
@@ -125,6 +126,7 @@ def _preview(s: str, n: int = 120) -> str:
   return s if len(s) <= n else s[: n - 1] + "…"
 
 
+@debug_utils.trace_tool("validate_prompt_alignment")
 def validate_prompt_alignment(
     examples: Sequence[data.ExampleData],
     aligner: resolver.WordAligner | None = None,

@@ -30,6 +30,7 @@ from absl import logging
 
 from langextract.core import base_model
 from langextract.core import data
+from langextract.core import debug_utils
 from langextract.core import exceptions
 from langextract.core import schema
 from langextract.core import types as core_types
@@ -334,6 +335,7 @@ class GeminiLanguageModel(base_model.BaseLanguageModel):  # pylint: disable=too-
 
     return bool(_RETRYABLE_MESSAGE_RE.search(str(error)))
 
+  @debug_utils.trace_tool("language_model_infer")
   def _process_single_prompt(
       self, prompt: str, config: dict
   ) -> core_types.ScoredOutput:
@@ -378,6 +380,42 @@ class GeminiLanguageModel(base_model.BaseLanguageModel):  # pylint: disable=too-
             f'Gemini API error: {e}', original=e
         ) from e
 
+  @debug_utils.trace_observe("batch_inference")
+  def _batch_inference(
+      self, batch_prompts: Sequence[str], config: dict
+  ) -> list[str]:
+    """Runs batch inference via the Gemini Batch API."""
+    try:
+      if self.gemini_schema:
+        self._validate_schema_config()
+      schema_dict = (
+          self.gemini_schema.schema_dict if self.gemini_schema else None
+      )
+      batch_config = dict(config)
+      batch_config.pop('response_mime_type', None)
+      batch_config.pop('response_schema', None)
+      system_instruction = batch_config.pop('system_instruction', None)
+      safety_settings = batch_config.pop('safety_settings', None)
+      return gemini_batch.infer_batch(
+          client=self._client,
+          model_id=self.model_id,
+          prompts=batch_prompts,
+          schema_dict=schema_dict,
+          gen_config=batch_config,
+          cfg=self._batch_cfg,
+          system_instruction=system_instruction,
+          safety_settings=safety_settings,
+          project=self.project,
+          location=self.location,
+      )
+    except exceptions.InferenceRuntimeError:
+      raise
+    except Exception as e:
+      raise exceptions.InferenceRuntimeError(
+          f'Gemini Batch API error: {e}', original=e
+      ) from e
+
+  @debug_utils.trace_tool("language_model_infer")
   def infer(
       self, batch_prompts: Sequence[str], **kwargs
   ) -> Iterator[Sequence[core_types.ScoredOutput]]:
@@ -411,38 +449,7 @@ class GeminiLanguageModel(base_model.BaseLanguageModel):  # pylint: disable=too-
     # Use batch API if threshold met
     if self._batch_cfg and self._batch_cfg.enabled:
       if len(batch_prompts) >= self._batch_cfg.threshold:
-        try:
-          if self.gemini_schema:
-            self._validate_schema_config()
-          schema_dict = (
-              self.gemini_schema.schema_dict if self.gemini_schema else None
-          )
-          # Remove schema fields from config for batch API - they're handled via schema_dict
-          batch_config = dict(config)
-          batch_config.pop('response_mime_type', None)
-          batch_config.pop('response_schema', None)
-          # Extract top-level fields that don't belong in generationConfig
-          system_instruction = batch_config.pop('system_instruction', None)
-          safety_settings = batch_config.pop('safety_settings', None)
-          outputs = gemini_batch.infer_batch(
-              client=self._client,
-              model_id=self.model_id,
-              prompts=batch_prompts,
-              schema_dict=schema_dict,
-              gen_config=batch_config,
-              cfg=self._batch_cfg,
-              system_instruction=system_instruction,
-              safety_settings=safety_settings,
-              project=self.project,
-              location=self.location,
-          )
-        except exceptions.InferenceRuntimeError:
-          raise
-        except Exception as e:
-          raise exceptions.InferenceRuntimeError(
-              f'Gemini Batch API error: {e}', original=e
-          ) from e
-
+        outputs = self._batch_inference(batch_prompts, config)
         for text in outputs:
           yield [core_types.ScoredOutput(score=1.0, output=text)]
         return

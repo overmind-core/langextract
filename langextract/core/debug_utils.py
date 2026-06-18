@@ -148,6 +148,87 @@ def debug_log_calls(fn: Callable) -> Callable:
   return wrapper
 
 
+_TRACING_INITIALIZED = False
+_TRACING_ENABLED = False
+
+
+def _ensure_overmind_init() -> bool:
+  global _TRACING_INITIALIZED, _TRACING_ENABLED
+  if _TRACING_INITIALIZED:
+    return _TRACING_ENABLED
+  _TRACING_INITIALIZED = True
+  import os
+
+  if not os.environ.get("OVERMIND_API_KEY"):
+    return False
+  from overmind import init  # pylint: disable=import-outside-toplevel
+
+  init(service_name="LangExtract Structured Extraction Agent")
+  _TRACING_ENABLED = True
+  return True
+
+
+def trace_workflow(name: str | None = None):
+  def decorator(fn: Callable) -> Callable:
+    traced_fn: Callable | None = None
+
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+      nonlocal traced_fn
+      if not _ensure_overmind_init():
+        return fn(*args, **kwargs)
+      if traced_fn is None:
+        from overmind import workflow  # pylint: disable=import-outside-toplevel
+
+        traced_fn = workflow(name)(fn)
+      return traced_fn(*args, **kwargs)
+
+    return wrapper
+
+  return decorator
+
+
+def trace_tool(name: str | None = None):
+  def decorator(fn: Callable) -> Callable:
+    traced_fn: Callable | None = None
+
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+      nonlocal traced_fn
+      if not _ensure_overmind_init():
+        return fn(*args, **kwargs)
+      if traced_fn is None:
+        from overmind import tool  # pylint: disable=import-outside-toplevel
+
+        traced_fn = tool(name)(fn)
+      return traced_fn(*args, **kwargs)
+
+    return wrapper
+
+  return decorator
+
+
+def trace_observe(name: str | None = None):
+  def decorator(fn: Callable) -> Callable:
+    traced_fn: Callable | None = None
+
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+      nonlocal traced_fn
+      if not _ensure_overmind_init():
+        return fn(*args, **kwargs)
+      if traced_fn is None:
+        from overmind import observe  # pylint: disable=import-outside-toplevel
+
+        traced_fn = observe(span_name=name)(fn)
+      return traced_fn(*args, **kwargs)
+
+    return wrapper
+
+  return decorator
+
+
+@trace_workflow("LangExtract Structured Extraction Agent")
 def configure_debug_logging() -> None:
   """Enable debug logging for the 'langextract' namespace only."""
   logger = logging.getLogger("langextract")
