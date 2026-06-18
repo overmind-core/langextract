@@ -30,6 +30,7 @@ from absl import logging
 
 from langextract.core import base_model
 from langextract.core import data
+from langextract.core import debug_utils
 from langextract.core import exceptions
 from langextract.core import schema
 from langextract.core import types as core_types
@@ -334,6 +335,7 @@ class GeminiLanguageModel(base_model.BaseLanguageModel):  # pylint: disable=too-
 
     return bool(_RETRYABLE_MESSAGE_RE.search(str(error)))
 
+  @debug_utils.trace_tool("language_model_infer")
   def _process_single_prompt(
       self, prompt: str, config: dict
   ) -> core_types.ScoredOutput:
@@ -378,6 +380,7 @@ class GeminiLanguageModel(base_model.BaseLanguageModel):  # pylint: disable=too-
             f'Gemini API error: {e}', original=e
         ) from e
 
+  @debug_utils.trace_tool("language_model_infer")
   def infer(
       self, batch_prompts: Sequence[str], **kwargs
   ) -> Iterator[Sequence[core_types.ScoredOutput]]:
@@ -411,41 +414,42 @@ class GeminiLanguageModel(base_model.BaseLanguageModel):  # pylint: disable=too-
     # Use batch API if threshold met
     if self._batch_cfg and self._batch_cfg.enabled:
       if len(batch_prompts) >= self._batch_cfg.threshold:
-        try:
-          if self.gemini_schema:
-            self._validate_schema_config()
-          schema_dict = (
-              self.gemini_schema.schema_dict if self.gemini_schema else None
-          )
-          # Remove schema fields from config for batch API - they're handled via schema_dict
-          batch_config = dict(config)
-          batch_config.pop('response_mime_type', None)
-          batch_config.pop('response_schema', None)
-          # Extract top-level fields that don't belong in generationConfig
-          system_instruction = batch_config.pop('system_instruction', None)
-          safety_settings = batch_config.pop('safety_settings', None)
-          outputs = gemini_batch.infer_batch(
-              client=self._client,
-              model_id=self.model_id,
-              prompts=batch_prompts,
-              schema_dict=schema_dict,
-              gen_config=batch_config,
-              cfg=self._batch_cfg,
-              system_instruction=system_instruction,
-              safety_settings=safety_settings,
-              project=self.project,
-              location=self.location,
-          )
-        except exceptions.InferenceRuntimeError:
-          raise
-        except Exception as e:
-          raise exceptions.InferenceRuntimeError(
-              f'Gemini Batch API error: {e}', original=e
-          ) from e
+        with debug_utils.trace_span("batch_inference", model=self.model_id):
+          try:
+            if self.gemini_schema:
+              self._validate_schema_config()
+            schema_dict = (
+                self.gemini_schema.schema_dict if self.gemini_schema else None
+            )
+            # Remove schema fields from config for batch API - they're handled via schema_dict
+            batch_config = dict(config)
+            batch_config.pop('response_mime_type', None)
+            batch_config.pop('response_schema', None)
+            # Extract top-level fields that don't belong in generationConfig
+            system_instruction = batch_config.pop('system_instruction', None)
+            safety_settings = batch_config.pop('safety_settings', None)
+            outputs = gemini_batch.infer_batch(
+                client=self._client,
+                model_id=self.model_id,
+                prompts=batch_prompts,
+                schema_dict=schema_dict,
+                gen_config=batch_config,
+                cfg=self._batch_cfg,
+                system_instruction=system_instruction,
+                safety_settings=safety_settings,
+                project=self.project,
+                location=self.location,
+            )
+          except exceptions.InferenceRuntimeError:
+            raise
+          except Exception as e:
+            raise exceptions.InferenceRuntimeError(
+                f'Gemini Batch API error: {e}', original=e
+            ) from e
 
-        for text in outputs:
-          yield [core_types.ScoredOutput(score=1.0, output=text)]
-        return
+          for text in outputs:
+            yield [core_types.ScoredOutput(score=1.0, output=text)]
+          return
       else:
         logging.info(
             'Gemini batch mode enabled but prompt count (%d) is below the'
@@ -458,34 +462,35 @@ class GeminiLanguageModel(base_model.BaseLanguageModel):  # pylint: disable=too-
 
     # Use parallel processing for batches larger than 1
     if len(batch_prompts) > 1 and self.max_workers > 1:
-      with concurrent.futures.ThreadPoolExecutor(
-          max_workers=min(self.max_workers, len(batch_prompts))
-      ) as executor:
-        future_to_index = {
-            executor.submit(
-                self._process_single_prompt, prompt, config.copy()
-            ): i
-            for i, prompt in enumerate(batch_prompts)
-        }
+      with debug_utils.trace_span("realtime_parallel", model=self.model_id):
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=min(self.max_workers, len(batch_prompts))
+        ) as executor:
+          future_to_index = {
+              executor.submit(
+                  self._process_single_prompt, prompt, config.copy()
+              ): i
+              for i, prompt in enumerate(batch_prompts)
+          }
 
-        results: list[core_types.ScoredOutput | None] = [None] * len(
-            batch_prompts
-        )
-        for future in concurrent.futures.as_completed(future_to_index):
-          index = future_to_index[future]
-          try:
-            results[index] = future.result()
-          except Exception as e:
-            raise exceptions.InferenceRuntimeError(
-                f'Parallel inference error: {str(e)}', original=e
-            ) from e
+          results: list[core_types.ScoredOutput | None] = [None] * len(
+              batch_prompts
+          )
+          for future in concurrent.futures.as_completed(future_to_index):
+            index = future_to_index[future]
+            try:
+              results[index] = future.result()
+            except Exception as e:
+              raise exceptions.InferenceRuntimeError(
+                  f'Parallel inference error: {str(e)}', original=e
+              ) from e
 
-        for result in results:
-          if result is None:
-            raise exceptions.InferenceRuntimeError(
-                'Failed to process one or more prompts'
-            )
-          yield [result]
+          for result in results:
+            if result is None:
+              raise exceptions.InferenceRuntimeError(
+                  'Failed to process one or more prompts'
+              )
+            yield [result]
     else:
       # Sequential processing for single prompt or worker
       for prompt in batch_prompts:

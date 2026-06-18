@@ -22,6 +22,7 @@ from typing import Any, Mapping
 
 import yaml
 
+from langextract.core import debug_utils
 from langextract.core import schema
 from langextract.core import types
 
@@ -118,6 +119,7 @@ class BaseLanguageModel(abc.ABC):
     incoming = dict(runtime_kwargs or {})
     return {**base, **incoming}
 
+  @debug_utils.trace_tool("language_model_infer")
   @abc.abstractmethod
   def infer(
       self, batch_prompts: Sequence[str], **kwargs
