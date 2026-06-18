@@ -22,6 +22,7 @@ import pathlib
 import pydantic
 from typing_extensions import override
 import yaml
+from overmind import tool, workflow
 
 from langextract.core import data
 from langextract.core import exceptions
@@ -112,6 +113,7 @@ class QAPromptGenerator:
         f"{self.answer_prefix}{answer}\n",
     ])
 
+  @tool("build_prompt")
   def render(self, question: str, additional_context: str | None = None) -> str:
     """Generate a text representation of the prompt.
 
@@ -212,6 +214,7 @@ class ContextAwarePromptBuilder(PromptBuilder):
     return self._context_window_chars
 
   @override
+  @workflow("context_aware")
   def build_prompt(
       self,
       chunk_text: str,

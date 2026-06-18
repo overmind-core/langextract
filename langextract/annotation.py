@@ -28,9 +28,11 @@ from __future__ import annotations
 import collections
 from collections.abc import Iterable, Iterator
 import time
+import typing
 from typing import DefaultDict
 
 from absl import logging
+from overmind import tool, workflow
 
 from langextract import chunking
 from langextract import progress
@@ -115,6 +117,7 @@ def _extractions_overlap(
   return start1 < end2 and start2 < end1
 
 
+@tool("chunk_text")
 def _document_chunk_iterator(
     documents: Iterable[data.Document],
     max_char_buffer: int,
@@ -158,6 +161,15 @@ def _document_chunk_iterator(
     visited_ids.add(document_id)
 
     yield from chunk_iter
+
+
+@tool("infer")
+def _infer_batch(
+    language_model: base_model.BaseLanguageModel,
+    batch_prompts: list[str],
+    **kwargs,
+) -> typing.Any:
+  return language_model.infer(batch_prompts=batch_prompts, **kwargs)
 
 
 class Annotator:
@@ -282,6 +294,7 @@ class Annotator:
           **kwargs,
       )
 
+  @workflow("single_pass")
   def _annotate_documents_single_pass(
       self,
       documents: Iterable[data.Document],
@@ -389,7 +402,7 @@ class Annotator:
           except AttributeError:
             pass
 
-        outputs = self._language_model.infer(batch_prompts=prompts, **kwargs)
+        outputs = _infer_batch(self._language_model, prompts, **kwargs)
         if not isinstance(outputs, list):
           outputs = list(outputs)
 
@@ -444,6 +457,7 @@ class Annotator:
 
     yield from _emit_docs_iter(keep_last_doc=False)
 
+  @workflow("multi_pass")
   def _annotate_documents_sequential_passes(
       self,
       documents: Iterable[data.Document],

@@ -148,8 +148,26 @@ def debug_log_calls(fn: Callable) -> Callable:
   return wrapper
 
 
+_TRACING_INITIALIZED = False
+
+
+def ensure_overmind_init() -> None:
+  """Initialize Overmind tracing once for the Structured Information Extractor."""
+  global _TRACING_INITIALIZED
+  if _TRACING_INITIALIZED:
+    return
+  _TRACING_INITIALIZED = True
+  try:
+    from overmind import init  # pylint: disable=import-outside-toplevel
+
+    init(service_name="Structured Information Extractor")
+  except Exception:
+    pass
+
+
 def configure_debug_logging() -> None:
   """Enable debug logging for the 'langextract' namespace only."""
+  ensure_overmind_init()
   logger = logging.getLogger("langextract")
 
   # Skip if we already added our handler

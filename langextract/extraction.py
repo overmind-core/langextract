@@ -27,12 +27,18 @@ from langextract import io
 from langextract import prompt_validation as pv
 from langextract import prompting
 from langextract import resolver
+from overmind import entry_point
+
 from langextract.core import base_model
 from langextract.core import data
+from langextract.core import debug_utils
 from langextract.core import format_handler as fh
 from langextract.core import tokenizer as tokenizer_lib
 
+debug_utils.ensure_overmind_init()
 
+
+@entry_point("Structured Information Extractor")
 def extract(
     text_or_documents: str | Iterable[data.Document],
     prompt_description: str | None = None,
