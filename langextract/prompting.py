@@ -20,7 +20,7 @@ import json
 import pathlib
 
 import pydantic
-from overmind import workflow
+from overmind import tool, workflow
 from typing_extensions import override
 import yaml
 
@@ -113,6 +113,7 @@ class QAPromptGenerator:
         f"{self.answer_prefix}{answer}\n",
     ])
 
+  @tool("build_extraction_prompt")
   def render(self, question: str, additional_context: str | None = None) -> str:
     """Generate a text representation of the prompt.
 

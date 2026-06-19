@@ -18,6 +18,7 @@ from __future__ import annotations
 from typing import Any
 import urllib.parse
 
+from overmind import workflow
 import tqdm
 
 # ANSI color codes for terminal output
@@ -78,6 +79,7 @@ def create_download_progress_bar(
   )
 
 
+@workflow("single_pass")
 def create_extraction_progress_bar(
     iterable: Any, model_info: str | None = None, disable: bool = False
 ) -> tqdm.tqdm:
