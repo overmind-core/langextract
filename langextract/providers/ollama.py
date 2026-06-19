@@ -100,6 +100,7 @@ from langextract.core import schema
 from langextract.core import types as core_types
 from langextract.providers import patterns
 from langextract.providers import router
+from overmind import observe
 
 # Ollama defaults
 _OLLAMA_DEFAULT_MODEL_URL = 'http://localhost:11434'
@@ -263,6 +264,7 @@ class OllamaLanguageModel(base_model.BaseLanguageModel):
       kwargs['timeout'] = timeout
     self._extra_kwargs = kwargs or {}
 
+  @observe("ollama_infer")
   def infer(
       self, batch_prompts: Sequence[str], **kwargs
   ) -> Iterator[Sequence[core_types.ScoredOutput]]:

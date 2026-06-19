@@ -32,6 +32,7 @@ from langextract.providers import openai_batch
 from langextract.providers import patterns
 from langextract.providers import router
 from langextract.providers import schemas
+from overmind import observe
 
 
 @router.register(
@@ -281,6 +282,7 @@ class OpenAILanguageModel(base_model.BaseLanguageModel):  # pylint: disable=too-
       results.append(list(output))
     return results
 
+  @observe("openai_infer")
   def infer(
       self, batch_prompts: Sequence[str], **kwargs
   ) -> Iterator[Sequence[core_types.ScoredOutput]]:

@@ -31,8 +31,10 @@ from langextract.core import base_model
 from langextract.core import data
 from langextract.core import format_handler as fh
 from langextract.core import tokenizer as tokenizer_lib
+from overmind import entry_point
 
 
+@entry_point("extract")
 def extract(
     text_or_documents: str | Iterable[data.Document],
     prompt_description: str | None = None,

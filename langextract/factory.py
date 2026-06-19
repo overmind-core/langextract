@@ -30,6 +30,7 @@ from langextract import providers
 from langextract.core import base_model
 from langextract.core import exceptions
 from langextract.providers import router
+from overmind import function
 
 
 @dataclasses.dataclass(slots=True, frozen=True)
@@ -100,6 +101,7 @@ def _kwargs_with_environment_defaults(
   return resolved
 
 
+@function("create_model")
 def create_model(
     config: ModelConfig,
     examples: typing.Sequence[typing.Any] | None = None,

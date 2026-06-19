@@ -24,6 +24,10 @@ import importlib
 import sys
 from typing import Any, Dict
 
+from overmind import init as overmind_init
+
+overmind_init(service_name="langextract")
+
 from langextract import visualization
 from langextract.extraction import extract as extract_func
 

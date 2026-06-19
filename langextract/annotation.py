@@ -41,6 +41,7 @@ from langextract.core import data
 from langextract.core import exceptions
 from langextract.core import format_handler as fh
 from langextract.core import tokenizer as tokenizer_lib
+from overmind import workflow
 
 
 def _merge_non_overlapping_extractions(
@@ -206,6 +207,7 @@ class Annotator:
         "Annotator initialized with format_handler: %s", format_handler
     )
 
+  @workflow("annotate_documents")
   def annotate_documents(
       self,
       documents: Iterable[data.Document],
@@ -529,6 +531,7 @@ class Annotator:
 
     logging.info("Sequential extraction passes completed.")
 
+  @workflow("annotate_text")
   def annotate_text(
       self,
       text: str,
