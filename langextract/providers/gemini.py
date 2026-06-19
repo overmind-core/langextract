@@ -27,7 +27,6 @@ import time
 from typing import Any, Final, Iterator, Sequence
 
 from absl import logging
-from overmind import tool
 
 from langextract.core import base_model
 from langextract.core import data
@@ -335,7 +334,6 @@ class GeminiLanguageModel(base_model.BaseLanguageModel):  # pylint: disable=too-
 
     return bool(_RETRYABLE_MESSAGE_RE.search(str(error)))
 
-  @tool("language_model_infer")
   def _process_single_prompt(
       self, prompt: str, config: dict
   ) -> core_types.ScoredOutput:
@@ -380,7 +378,6 @@ class GeminiLanguageModel(base_model.BaseLanguageModel):  # pylint: disable=too-
             f'Gemini API error: {e}', original=e
         ) from e
 
-  @tool("language_model_infer")
   def infer(
       self, batch_prompts: Sequence[str], **kwargs
   ) -> Iterator[Sequence[core_types.ScoredOutput]]:
