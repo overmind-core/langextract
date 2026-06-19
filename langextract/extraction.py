@@ -35,7 +35,7 @@ from langextract.core import format_handler as fh
 from langextract.core import tokenizer as tokenizer_lib
 
 
-@entry_point("Structured Extraction Agent")
+@entry_point("Structured Information Extractor")
 def extract(
     text_or_documents: str | Iterable[data.Document],
     prompt_description: str | None = None,

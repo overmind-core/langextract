@@ -149,7 +149,7 @@ def debug_log_calls(fn: Callable) -> Callable:
   return wrapper
 
 
-@entry_point("Structured Extraction Agent")
+@entry_point("Structured Information Extractor")
 def configure_debug_logging() -> None:
   """Enable debug logging for the 'langextract' namespace only."""
   logger = logging.getLogger("langextract")

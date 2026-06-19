@@ -446,7 +446,7 @@ class Annotator:
 
     yield from _emit_docs_iter(keep_last_doc=False)
 
-  @workflow("sequential_passes")
+  @workflow("multi_pass")
   def _annotate_documents_sequential_passes(
       self,
       documents: Iterable[data.Document],

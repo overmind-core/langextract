@@ -26,7 +26,7 @@ from typing import Any, Dict
 
 import overmind
 
-overmind.init(service_name="Structured Extraction Agent")
+overmind.init(service_name="Structured Information Extractor")
 
 from langextract import visualization
 from langextract.extraction import extract as extract_func
