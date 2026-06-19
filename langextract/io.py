@@ -26,6 +26,7 @@ from urllib import parse as urlparse
 
 import pandas as pd
 import requests
+from overmind import tool
 
 from langextract import data_lib
 from langextract import progress
@@ -262,6 +263,7 @@ def is_url(text: str) -> bool:
     return False
 
 
+@tool("io.download_text_from_url")
 def download_text_from_url(
     url: str,
     timeout: int = DEFAULT_TIMEOUT_SECONDS,

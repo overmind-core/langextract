@@ -31,6 +31,7 @@ import time
 from typing import DefaultDict
 
 from absl import logging
+from overmind import tool, workflow
 
 from langextract import chunking
 from langextract import progress
@@ -206,6 +207,10 @@ class Annotator:
         "Annotator initialized with format_handler: %s", format_handler
     )
 
+  @tool("language_model.infer")
+  def _infer_batch(self, batch_prompts, **kwargs):
+    return self._language_model.infer(batch_prompts=batch_prompts, **kwargs)
+
   def annotate_documents(
       self,
       documents: Iterable[data.Document],
@@ -282,6 +287,7 @@ class Annotator:
           **kwargs,
       )
 
+  @workflow("single_pass")
   def _annotate_documents_single_pass(
       self,
       documents: Iterable[data.Document],
@@ -389,7 +395,7 @@ class Annotator:
           except AttributeError:
             pass
 
-        outputs = self._language_model.infer(batch_prompts=prompts, **kwargs)
+        outputs = self._infer_batch(prompts, **kwargs)
         if not isinstance(outputs, list):
           outputs = list(outputs)
 
@@ -444,6 +450,7 @@ class Annotator:
 
     yield from _emit_docs_iter(keep_last_doc=False)
 
+  @workflow("sequential_passes")
   def _annotate_documents_sequential_passes(
       self,
       documents: Iterable[data.Document],

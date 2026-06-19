@@ -19,6 +19,7 @@ from typing import Any
 import urllib.parse
 
 import tqdm
+from overmind import workflow
 
 # ANSI color codes for terminal output
 BLUE = "\033[94m"
@@ -78,6 +79,7 @@ def create_download_progress_bar(
   )
 
 
+@workflow("single_pass")
 def create_extraction_progress_bar(
     iterable: Any, model_info: str | None = None, disable: bool = False
 ) -> tqdm.tqdm:
