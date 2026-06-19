@@ -31,6 +31,7 @@ import time
 from typing import DefaultDict
 
 from absl import logging
+from overmind import tool, workflow
 
 from langextract import chunking
 from langextract import progress
@@ -43,6 +44,7 @@ from langextract.core import format_handler as fh
 from langextract.core import tokenizer as tokenizer_lib
 
 
+@tool("merge_multi_pass_extractions")
 def _merge_non_overlapping_extractions(
     all_extractions: list[Iterable[data.Extraction]],
 ) -> list[data.Extraction]:
@@ -115,6 +117,7 @@ def _extractions_overlap(
   return start1 < end2 and start2 < end1
 
 
+@tool("chunk_document")
 def _document_chunk_iterator(
     documents: Iterable[data.Document],
     max_char_buffer: int,
@@ -149,7 +152,7 @@ def _document_chunk_iterator(
       raise exceptions.InvalidDocumentError(
           f"Document id {document_id} is already visited."
       )
-    chunk_iter = chunking.ChunkIterator(
+    chunk_iter = chunking.chunk_document(
         text=tokenized_text,
         max_char_buffer=max_char_buffer,
         document=document,
@@ -205,6 +208,10 @@ class Annotator:
     logging.debug(
         "Annotator initialized with format_handler: %s", format_handler
     )
+
+  @tool("language_model_infer")
+  def _infer_batch(self, batch_prompts, **kwargs):
+    return self._language_model.infer(batch_prompts=batch_prompts, **kwargs)
 
   def annotate_documents(
       self,
@@ -282,6 +289,7 @@ class Annotator:
           **kwargs,
       )
 
+  @workflow("single_pass")
   def _annotate_documents_single_pass(
       self,
       documents: Iterable[data.Document],
@@ -389,7 +397,7 @@ class Annotator:
           except AttributeError:
             pass
 
-        outputs = self._language_model.infer(batch_prompts=prompts, **kwargs)
+        outputs = self._infer_batch(prompts, **kwargs)
         if not isinstance(outputs, list):
           outputs = list(outputs)
 
@@ -444,6 +452,7 @@ class Annotator:
 
     yield from _emit_docs_iter(keep_last_doc=False)
 
+  @workflow("sequential_passes")
   def _annotate_documents_sequential_passes(
       self,
       documents: Iterable[data.Document],
