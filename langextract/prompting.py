@@ -20,6 +20,7 @@ import json
 import pathlib
 
 import pydantic
+from overmind import workflow
 from typing_extensions import override
 import yaml
 
@@ -212,6 +213,7 @@ class ContextAwarePromptBuilder(PromptBuilder):
     return self._context_window_chars
 
   @override
+  @workflow("context_aware")
   def build_prompt(
       self,
       chunk_text: str,
@@ -239,6 +241,7 @@ class ContextAwarePromptBuilder(PromptBuilder):
     self._update_state(document_id, chunk_text)
     return prompt
 
+  @workflow("context_aware")
   def _build_effective_context(
       self,
       document_id: str,
