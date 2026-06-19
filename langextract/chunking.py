@@ -30,6 +30,7 @@ import more_itertools
 from langextract.core import data
 from langextract.core import exceptions
 from langextract.core import tokenizer as tokenizer_lib
+from overmind import tool
 
 
 class TokenUtilError(exceptions.LangExtractError):
@@ -262,6 +263,7 @@ def _sanitize(text: str) -> str:
   return sanitized_text
 
 
+@tool("chunk_text")
 def make_batches_of_textchunk(
     chunk_iter: Iterator[TextChunk],
     batch_length: int,
@@ -382,6 +384,7 @@ class ChunkIterator:
   * "And so are you." len=15
   """
 
+  @tool("chunk_text")
   def __init__(
       self,
       text: str | tokenizer_lib.TokenizedText | None,
@@ -438,6 +441,7 @@ class ChunkIterator:
         char_interval.end_pos - char_interval.start_pos
     ) > self.max_char_buffer
 
+  @tool("chunk_text")
   def __next__(self) -> TextChunk:
     sentence = next(self.sentence_iter)
     # If the next token is greater than the max_char_buffer, let it be the

@@ -41,7 +41,7 @@ from langextract.core import data
 from langextract.core import exceptions
 from langextract.core import format_handler as fh
 from langextract.core import tokenizer as tokenizer_lib
-from overmind import workflow
+from overmind import tool, workflow
 
 
 def _merge_non_overlapping_extractions(
@@ -116,6 +116,7 @@ def _extractions_overlap(
   return start1 < end2 and start2 < end1
 
 
+@tool("chunk_text")
 def _document_chunk_iterator(
     documents: Iterable[data.Document],
     max_char_buffer: int,

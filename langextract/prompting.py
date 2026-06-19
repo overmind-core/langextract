@@ -26,7 +26,7 @@ import yaml
 from langextract.core import data
 from langextract.core import exceptions
 from langextract.core import format_handler
-from overmind import workflow
+from overmind import tool, workflow
 
 
 class PromptBuilderError(exceptions.LangExtractError):
@@ -154,6 +154,7 @@ class PromptBuilder:
     """
     self._generator = generator
 
+  @tool("build_prompt")
   def build_prompt(
       self,
       chunk_text: str,

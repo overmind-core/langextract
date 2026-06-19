@@ -39,6 +39,7 @@ from langextract.core import exceptions
 from langextract.core import format_handler as fh
 from langextract.core import schema
 from langextract.core import tokenizer as tokenizer_lib
+from overmind import tool
 
 
 class LcsSpan(typing.NamedTuple):
@@ -264,6 +265,7 @@ class Resolver(AbstractResolver):
     self.extraction_index_suffix = extraction_index_suffix
     self._constraint = constraint
 
+  @tool("resolve")
   def resolve(
       self,
       input_text: str,
@@ -315,6 +317,7 @@ class Resolver(AbstractResolver):
 
     return processed_extractions
 
+  @tool("align")
   def align(
       self,
       extractions: Sequence[data.Extraction],

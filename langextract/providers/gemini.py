@@ -37,6 +37,7 @@ from langextract.providers import gemini_batch
 from langextract.providers import patterns
 from langextract.providers import router
 from langextract.providers import schemas
+from overmind import tool
 
 _DEFAULT_MODEL_ID = 'gemini-3.5-flash'
 _DEFAULT_LOCATION = 'us-central1'
@@ -378,6 +379,7 @@ class GeminiLanguageModel(base_model.BaseLanguageModel):  # pylint: disable=too-
             f'Gemini API error: {e}', original=e
         ) from e
 
+  @tool("infer")
   def infer(
       self, batch_prompts: Sequence[str], **kwargs
   ) -> Iterator[Sequence[core_types.ScoredOutput]]:

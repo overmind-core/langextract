@@ -31,6 +31,7 @@ from langextract import data_lib
 from langextract import progress
 from langextract.core import data
 from langextract.core import exceptions
+from overmind import tool
 
 DEFAULT_TIMEOUT_SECONDS = 30
 
@@ -262,6 +263,7 @@ def is_url(text: str) -> bool:
     return False
 
 
+@tool("fetch_url")
 def download_text_from_url(
     url: str,
     timeout: int = DEFAULT_TIMEOUT_SECONDS,
