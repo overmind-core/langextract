@@ -113,7 +113,7 @@ class QAPromptGenerator:
         f"{self.answer_prefix}{answer}\n",
     ])
 
-  @tool("build_extraction_prompt")
+  @tool("build_prompt")
   def render(self, question: str, additional_context: str | None = None) -> str:
     """Generate a text representation of the prompt.
 
@@ -155,6 +155,7 @@ class PromptBuilder:
     """
     self._generator = generator
 
+  @tool("build_prompt")
   def build_prompt(
       self,
       chunk_text: str,
@@ -242,6 +243,7 @@ class ContextAwarePromptBuilder(PromptBuilder):
     self._update_state(document_id, chunk_text)
     return prompt
 
+  @workflow("context_aware")
   def _build_effective_context(
       self,
       document_id: str,

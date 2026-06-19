@@ -263,7 +263,7 @@ def is_url(text: str) -> bool:
     return False
 
 
-@tool("io.download_text_from_url")
+@tool("fetch_url")
 def download_text_from_url(
     url: str,
     timeout: int = DEFAULT_TIMEOUT_SECONDS,
