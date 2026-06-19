@@ -41,6 +41,7 @@ from langextract.core import data
 from langextract.core import exceptions
 from langextract.core import format_handler as fh
 from langextract.core import tokenizer as tokenizer_lib
+from overmind import workflow
 
 
 def _merge_non_overlapping_extractions(
@@ -282,6 +283,7 @@ class Annotator:
           **kwargs,
       )
 
+  @workflow("single_pass")
   def _annotate_documents_single_pass(
       self,
       documents: Iterable[data.Document],
@@ -444,6 +446,7 @@ class Annotator:
 
     yield from _emit_docs_iter(keep_last_doc=False)
 
+  @workflow("multi_pass")
   def _annotate_documents_sequential_passes(
       self,
       documents: Iterable[data.Document],

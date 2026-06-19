@@ -31,8 +31,10 @@ from langextract.core import base_model
 from langextract.core import data
 from langextract.core import format_handler as fh
 from langextract.core import tokenizer as tokenizer_lib
+from overmind import entry_point, init as overmind_init
 
 
+@entry_point("LangExtract Structured Extraction Agent")
 def extract(
     text_or_documents: str | Iterable[data.Document],
     prompt_description: str | None = None,
@@ -178,6 +180,9 @@ def extract(
         fails.
       pv.PromptAlignmentError: If validation fails in ERROR mode.
   """
+  overmind_init(
+      service_name="LangExtract Structured Extraction Agent", providers=["google"]
+  )
   if not examples:
     raise ValueError(
         "Examples are required for reliable extraction. Please provide at least"

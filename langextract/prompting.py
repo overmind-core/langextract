@@ -26,6 +26,7 @@ import yaml
 from langextract.core import data
 from langextract.core import exceptions
 from langextract.core import format_handler
+from overmind import workflow
 
 
 class PromptBuilderError(exceptions.LangExtractError):
@@ -212,6 +213,7 @@ class ContextAwarePromptBuilder(PromptBuilder):
     return self._context_window_chars
 
   @override
+  @workflow("context_aware")
   def build_prompt(
       self,
       chunk_text: str,
