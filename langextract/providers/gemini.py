@@ -27,6 +27,7 @@ import time
 from typing import Any, Final, Iterator, Sequence
 
 from absl import logging
+from overmind import tool, workflow
 
 from langextract.core import base_model
 from langextract.core import data
@@ -105,6 +106,33 @@ _API_CONFIG_KEYS: Final[set[str]] = {
     'stop_sequences',
     'candidate_count',
 }
+
+
+@workflow("batch_api_inference")
+def _batch_api_inference(
+    client,
+    model_id,
+    prompts,
+    schema_dict,
+    gen_config,
+    cfg,
+    system_instruction=None,
+    safety_settings=None,
+    project=None,
+    location=None,
+):
+  return gemini_batch.infer_batch(
+      client=client,
+      model_id=model_id,
+      prompts=prompts,
+      schema_dict=schema_dict,
+      gen_config=gen_config,
+      cfg=cfg,
+      system_instruction=system_instruction,
+      safety_settings=safety_settings,
+      project=project,
+      location=location,
+  )
 
 
 @router.register(
@@ -378,6 +406,7 @@ class GeminiLanguageModel(base_model.BaseLanguageModel):  # pylint: disable=too-
             f'Gemini API error: {e}', original=e
         ) from e
 
+  @tool("infer")
   def infer(
       self, batch_prompts: Sequence[str], **kwargs
   ) -> Iterator[Sequence[core_types.ScoredOutput]]:
@@ -424,7 +453,7 @@ class GeminiLanguageModel(base_model.BaseLanguageModel):  # pylint: disable=too-
           # Extract top-level fields that don't belong in generationConfig
           system_instruction = batch_config.pop('system_instruction', None)
           safety_settings = batch_config.pop('safety_settings', None)
-          outputs = gemini_batch.infer_batch(
+          outputs = _batch_api_inference(
               client=self._client,
               model_id=self.model_id,
               prompts=batch_prompts,
