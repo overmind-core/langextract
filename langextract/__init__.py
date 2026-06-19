@@ -24,10 +24,6 @@ import importlib
 import sys
 from typing import Any, Dict
 
-import overmind
-
-overmind.init(service_name="Structured Text Extraction Agent")
-
 from langextract import visualization
 from langextract.extraction import extract as extract_func
 

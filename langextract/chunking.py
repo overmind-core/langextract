@@ -26,7 +26,6 @@ import re
 
 from absl import logging
 import more_itertools
-from overmind import tool
 
 from langextract.core import data
 from langextract.core import exceptions
@@ -505,19 +504,3 @@ class ChunkIterator:
         token_interval=curr_chunk,
         document=self.document,
     )
-
-
-@tool("chunk_document")
-def chunk_document(
-    text: str | tokenizer_lib.TokenizedText | None,
-    max_char_buffer: int,
-    tokenizer_impl: tokenizer_lib.Tokenizer,
-    document: data.Document | None = None,
-) -> ChunkIterator:
-  """Creates a chunk iterator for a document."""
-  return ChunkIterator(
-      text=text,
-      max_char_buffer=max_char_buffer,
-      tokenizer_impl=tokenizer_impl,
-      document=document,
-  )
