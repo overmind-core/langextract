@@ -265,7 +265,7 @@ class Resolver(AbstractResolver):
     self.extraction_index_suffix = extraction_index_suffix
     self._constraint = constraint
 
-  @tool("Resolver.resolve")
+  @tool("resolve_extractions")
   def resolve(
       self,
       input_text: str,
@@ -317,7 +317,7 @@ class Resolver(AbstractResolver):
 
     return processed_extractions
 
-  @tool("Resolver.align")
+  @tool("align_extractions")
   def align(
       self,
       extractions: Sequence[data.Extraction],

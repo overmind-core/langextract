@@ -116,6 +116,7 @@ def _extractions_overlap(
   return start1 < end2 and start2 < end1
 
 
+@tool("chunk_document")
 def _document_chunk_iterator(
     documents: Iterable[data.Document],
     max_char_buffer: int,
@@ -150,7 +151,7 @@ def _document_chunk_iterator(
       raise exceptions.InvalidDocumentError(
           f"Document id {document_id} is already visited."
       )
-    chunk_iter = chunking.ChunkIterator(
+    chunk_iter = chunking.chunk_document(
         text=tokenized_text,
         max_char_buffer=max_char_buffer,
         document=document,
@@ -207,7 +208,7 @@ class Annotator:
         "Annotator initialized with format_handler: %s", format_handler
     )
 
-  @tool("language_model.infer")
+  @tool("language_model_infer")
   def _infer_batch(self, batch_prompts, **kwargs):
     return self._language_model.infer(batch_prompts=batch_prompts, **kwargs)
 
@@ -450,7 +451,7 @@ class Annotator:
 
     yield from _emit_docs_iter(keep_last_doc=False)
 
-  @workflow("sequential_passes")
+  @workflow("multi_pass")
   def _annotate_documents_sequential_passes(
       self,
       documents: Iterable[data.Document],
