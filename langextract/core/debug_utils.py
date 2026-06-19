@@ -23,6 +23,7 @@ import time
 from typing import Any, Callable, Mapping
 
 from absl import logging as absl_logging
+from overmind import entry_point, tool
 
 _LOG = logging.getLogger("langextract.debug")
 
@@ -103,6 +104,7 @@ def _format_bound_args(
   return ", ".join(parts)
 
 
+@tool("chunk_document")
 def debug_log_calls(fn: Callable) -> Callable:
   """Log function calls with redacted sensitive data and timing.
 
@@ -148,6 +150,7 @@ def debug_log_calls(fn: Callable) -> Callable:
   return wrapper
 
 
+@entry_point("Structured Text Extraction Agent")
 def configure_debug_logging() -> None:
   """Enable debug logging for the 'langextract' namespace only."""
   logger = logging.getLogger("langextract")

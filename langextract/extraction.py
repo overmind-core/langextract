@@ -21,6 +21,8 @@ import dataclasses
 import typing
 import warnings
 
+from overmind import entry_point
+
 from langextract import annotation
 from langextract import factory
 from langextract import io
@@ -33,6 +35,7 @@ from langextract.core import format_handler as fh
 from langextract.core import tokenizer as tokenizer_lib
 
 
+@entry_point("Structured Text Extraction Agent")
 def extract(
     text_or_documents: str | Iterable[data.Document],
     prompt_description: str | None = None,
