@@ -24,8 +24,9 @@ import yaml
 
 from langextract.core import schema
 from langextract.core import types
+from langextract.core import debug_utils
 
-__all__ = ['BaseLanguageModel']
+__all__ = ['BaseLanguageModel', 'language_model_infer']
 
 
 class BaseLanguageModel(abc.ABC):
@@ -180,3 +181,13 @@ class BaseLanguageModel(abc.ABC):
       raise ValueError(
           f'Failed to parse output as {format_type.name}: {str(e)}'
       ) from e
+
+
+@debug_utils.trace_tool("language_model_infer")
+def language_model_infer(
+    language_model: BaseLanguageModel,
+    batch_prompts: Sequence[str],
+    **kwargs: Any,
+) -> Iterator[Sequence[types.ScoredOutput]]:
+  """Runs traced language model inference for a batch of prompts."""
+  return language_model.infer(batch_prompts, **kwargs)
