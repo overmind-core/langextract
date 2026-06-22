@@ -214,6 +214,7 @@ class ContextAwarePromptBuilder(PromptBuilder):
     return self._context_window_chars
 
   @override
+  @tool("build_prompt")
   @workflow("context_aware")
   def build_prompt(
       self,
