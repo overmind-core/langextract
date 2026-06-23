@@ -22,6 +22,7 @@ import pathlib
 import pydantic
 from typing_extensions import override
 import yaml
+from overmind import workflow
 
 from langextract.core import data
 from langextract.core import exceptions
@@ -211,6 +212,7 @@ class ContextAwarePromptBuilder(PromptBuilder):
     """Number of trailing characters from previous chunk to include."""
     return self._context_window_chars
 
+  @workflow("context_aware_chunking")
   @override
   def build_prompt(
       self,

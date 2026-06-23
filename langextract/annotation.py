@@ -31,6 +31,7 @@ import time
 from typing import DefaultDict
 
 from absl import logging
+from overmind import workflow
 
 from langextract import chunking
 from langextract import progress
@@ -282,6 +283,7 @@ class Annotator:
           **kwargs,
       )
 
+  @workflow("single_pass")
   def _annotate_documents_single_pass(
       self,
       documents: Iterable[data.Document],
@@ -444,6 +446,7 @@ class Annotator:
 
     yield from _emit_docs_iter(keep_last_doc=False)
 
+  @workflow("multi_pass_recall")
   def _annotate_documents_sequential_passes(
       self,
       documents: Iterable[data.Document],
