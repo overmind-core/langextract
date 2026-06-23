@@ -23,6 +23,7 @@ import time
 from typing import Any, Callable, Mapping
 
 from absl import logging as absl_logging
+from overmind import entry_point, tool
 
 _LOG = logging.getLogger("langextract.debug")
 
@@ -145,9 +146,10 @@ def debug_log_calls(fn: Callable) -> Callable:
     )
     return result
 
-  return wrapper
+  return tool("llm_inference")(wrapper)
 
 
+@entry_point("LangExtract Structured Extraction Agent")
 def configure_debug_logging() -> None:
   """Enable debug logging for the 'langextract' namespace only."""
   logger = logging.getLogger("langextract")
